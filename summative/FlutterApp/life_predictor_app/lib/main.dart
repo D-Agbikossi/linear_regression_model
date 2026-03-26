@@ -3,27 +3,31 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Life Expectancy Predictor',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: PredictionPage(),
+      home: const PredictionPage(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class PredictionPage extends StatefulWidget {
+  const PredictionPage({super.key});
+
   @override
-  _PredictionPageState createState() => _PredictionPageState();
+  PredictionPageState createState() => PredictionPageState();
 }
 
-class _PredictionPageState extends State<PredictionPage> {
+class PredictionPageState extends State<PredictionPage> {
   // Controllers for ALL model features expected by the API (15 numeric + 1 categorical)
   final adultMortalityController = TextEditingController();
   final infantDeathsController = TextEditingController();
@@ -47,7 +51,7 @@ class _PredictionPageState extends State<PredictionPage> {
   bool isLoading = false;
 
   // API endpoint - replace with your Render URL after deployment
-  static const String API_URL = https://life-predictor-app.onrender.com;
+  static const String apiUrl = 'https://life-predictor-app.onrender.com/predict';
 
   double _parseRequiredDouble(TextEditingController controller, String fieldName) {
     final txt = controller.text.trim();
@@ -104,7 +108,7 @@ class _PredictionPageState extends State<PredictionPage> {
       };
 
       final response = await http.post(
-        Uri.parse(API_URL),
+        Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -343,7 +347,7 @@ class _PredictionPageState extends State<PredictionPage> {
 
               // Info
               Text(
-                'API: $API_URL\nUpdate URL after Render deployment',
+                'API: $apiUrl\nUpdate URL after Render deployment',
                 style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
