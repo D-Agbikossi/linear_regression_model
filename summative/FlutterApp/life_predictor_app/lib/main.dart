@@ -28,6 +28,8 @@ class PredictionPage extends StatefulWidget {
 }
 
 class PredictionPageState extends State<PredictionPage> {
+  final _formKey = GlobalKey<FormState>();
+
   // Controllers for ALL model features expected by the API (15 numeric + 1 categorical)
   final adultMortalityController = TextEditingController();
   final infantDeathsController = TextEditingController();
@@ -53,7 +55,34 @@ class PredictionPageState extends State<PredictionPage> {
   // API endpoint - replace with your Render URL after deployment
   static const String apiUrl = 'https://linear-regression-model-x6f4.onrender.com';
 
-  double _parseRequiredDouble(TextEditingController controller, String fieldName) {
+  String? _validateRequiredNumberInRange(
+    String? value,
+    String fieldName,
+    double min,
+    double max,
+  ) {
+    final txt = value?.trim() ?? '';
+    if (txt.isEmpty) return '$fieldName is required';
+    final parsed = double.tryParse(txt);
+    if (parsed == null) return 'Enter a valid number for $fieldName';
+    if (parsed < min || parsed > max) return '$fieldName must be between $min and $max';
+    return null;
+  }
+
+  String? _validateStatus(String? value) {
+    final txt = value?.trim() ?? '';
+    if (txt.isEmpty) return 'Status is required';
+    final lower = txt.toLowerCase();
+    if (lower == 'developing' || lower == 'developed') return null;
+    return 'Status must be Developing or Developed';
+  }
+
+  double _parseRequiredInRange(
+    TextEditingController controller,
+    String fieldName,
+    double min,
+    double max,
+  ) {
     final txt = controller.text.trim();
     if (txt.isEmpty) {
       throw Exception('Missing input: $fieldName');
@@ -62,11 +91,15 @@ class PredictionPageState extends State<PredictionPage> {
     if (v == null) {
       throw Exception('Invalid number for $fieldName');
     }
+    if (v < min || v > max) {
+      throw Exception('Out of range for $fieldName. Expected $min to $max.');
+    }
     return v;
   }
 
   Future<void> predict() async {
     if (isLoading) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     
     setState(() {
       isLoading = true;
@@ -87,28 +120,32 @@ class PredictionPageState extends State<PredictionPage> {
 
       // Build request body with all required fields
       final requestBody = {
-        'adult_mortality': _parseRequiredDouble(adultMortalityController, 'adult_mortality'),
-        'infant_deaths': _parseRequiredDouble(infantDeathsController, 'infant_deaths'),
-        'alcohol': _parseRequiredDouble(alcoholController, 'alcohol'),
-        'bmi': _parseRequiredDouble(bmiController, 'bmi'),
-        'hiv_aids': _parseRequiredDouble(hivAidsController, 'hiv_aids'),
-        'gdp': _parseRequiredDouble(gdpController, 'gdp'),
-        'schooling': _parseRequiredDouble(schoolingController, 'schooling'),
-        'healthcare_index': _parseRequiredDouble(healthcareIndexController, 'healthcare_index'),
-        'economic_index': _parseRequiredDouble(economicIndexController, 'economic_index'),
+        'adult_mortality':
+            _parseRequiredInRange(adultMortalityController, 'adult_mortality', 0, 1000),
+        'infant_deaths':
+            _parseRequiredInRange(infantDeathsController, 'infant_deaths', 0, 200),
+        'alcohol': _parseRequiredInRange(alcoholController, 'alcohol', 0, 20),
+        'bmi': _parseRequiredInRange(bmiController, 'bmi', 10, 50),
+        'hiv_aids': _parseRequiredInRange(hivAidsController, 'hiv_aids', 0, 50),
+        'gdp': _parseRequiredInRange(gdpController, 'gdp', 0, 5000000),
+        'schooling': _parseRequiredInRange(schoolingController, 'schooling', 0, 25),
+        'healthcare_index':
+            _parseRequiredInRange(healthcareIndexController, 'healthcare_index', 0, 100),
+        'economic_index': _parseRequiredInRange(economicIndexController, 'economic_index', 0, 1),
         'womens_empowerment':
-            _parseRequiredDouble(womensEmpowermentController, 'womens_empowerment'),
-        'nutrition_index': _parseRequiredDouble(nutritionIndexController, 'nutrition_index'),
+            _parseRequiredInRange(womensEmpowermentController, 'womens_empowerment', 0, 1),
+        'nutrition_index': _parseRequiredInRange(nutritionIndexController, 'nutrition_index', 0, 1),
         'immunization_coverage':
-            _parseRequiredDouble(immunizationCoverageController, 'immunization_coverage'),
+            _parseRequiredInRange(immunizationCoverageController, 'immunization_coverage', 0, 100),
         'socioeconomic_health':
-            _parseRequiredDouble(socioeconomicHealthController, 'socioeconomic_health'),
-        'development_stage': _parseRequiredDouble(developmentStageController, 'development_stage'),
+            _parseRequiredInRange(socioeconomicHealthController, 'socioeconomic_health', 0, 1),
+        'development_stage':
+            _parseRequiredInRange(developmentStageController, 'development_stage', 0, 3),
         'status': status,
       };
 
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse('$apiUrl/predict'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -147,10 +184,12 @@ class PredictionPageState extends State<PredictionPage> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      child: TextField(
+      child: TextFormField(
         controller: controller,
         keyboardType: keyboardType ??
             TextInputType.numberWithOptions(decimal: true),
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        validator: (value) => _validateRequiredNumberInRange(value, label, min, max),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint ?? '$min - $max',
@@ -164,9 +203,11 @@ class PredictionPageState extends State<PredictionPage> {
   Widget buildStatusField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      child: TextField(
+      child: TextFormField(
         controller: statusController,
         keyboardType: TextInputType.text,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        validator: _validateStatus,
         decoration: InputDecoration(
           labelText: 'Status (Developing/Developed)',
           hintText: 'Developing or Developed',
@@ -189,9 +230,11 @@ class PredictionPageState extends State<PredictionPage> {
       body: Padding(
         padding: EdgeInsets.all(16),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // Title Card
               Card(
                 child: Padding(
@@ -351,7 +394,8 @@ class PredictionPageState extends State<PredictionPage> {
                 style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
