@@ -51,7 +51,7 @@ class PredictionPageState extends State<PredictionPage> {
   bool isLoading = false;
 
   // API endpoint - replace with your Render URL after deployment
-  static const String apiUrl = 'https://life-predictor-app.onrender.com/predict';
+  static const String apiUrl = 'https://linear-regression-model-x6f4.onrender.com';
 
   double _parseRequiredDouble(TextEditingController controller, String fieldName) {
     final txt = controller.text.trim();
