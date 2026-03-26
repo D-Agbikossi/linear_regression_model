@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -145,10 +147,11 @@ class PredictionPageState extends State<PredictionPage> {
       };
 
       final response = await http.post(
-        Uri.parse('$apiUrl/predict'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      );
+            Uri.parse('$apiUrl/predict'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: 25));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -165,6 +168,15 @@ class PredictionPageState extends State<PredictionPage> {
           result = '❌ Error: ${response.statusCode}\n${response.body}';
         });
       }
+    } on TimeoutException {
+      setState(() {
+        result =
+            '❌ Request timed out. The server may be sleeping or unavailable. Please try again in 30-60 seconds.';
+      });
+    } on SocketException {
+      setState(() {
+        result = '❌ Network error. Check internet connection and API availability.';
+      });
     } catch (e) {
       setState(() {
         result = '❌ Input Error: $e';
