@@ -54,7 +54,7 @@ class PredictionPageState extends State<PredictionPage> {
   bool isLoading = false;
 
   // API endpoint - replace with your Render URL after deployment
-  static const String apiUrl = 'http://127.0.0.1:8000';
+  static const String apiUrl = 'linearregressionmodel-production-28ba.up.railway.app';
 
   String? _validateRequiredNumberInRange(
     String? value,
