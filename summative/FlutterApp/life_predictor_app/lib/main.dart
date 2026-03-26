@@ -54,7 +54,7 @@ class PredictionPageState extends State<PredictionPage> {
   bool isLoading = false;
 
   // API endpoint - replace with your Render URL after deployment
-  static const String apiUrl = 'https://linear-regression-model-x6f4.onrender.com';
+  static const String apiUrl = 'http://127.0.0.1:8000';
 
   String? _validateRequiredNumberInRange(
     String? value,
