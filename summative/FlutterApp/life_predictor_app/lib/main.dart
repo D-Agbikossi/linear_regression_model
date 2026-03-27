@@ -47,14 +47,12 @@ class PredictionPageState extends State<PredictionPage> {
   final socioeconomicHealthController = TextEditingController();
   final developmentStageController = TextEditingController();
 
-  // Dataset categorical feature
   final statusController = TextEditingController();
 
   String result = '';
   bool isLoading = false;
 
-  // API endpoint - replace with your Render URL after deployment
-  static const String apiUrl = 'linearregressionmodel-production-28ba.up.railway.app';
+  static const String apiUrl = 'https://linear-regression-model-x6f4.onrender.com';
 
   String? _validateRequiredNumberInRange(
     String? value,
@@ -154,25 +152,25 @@ class PredictionPageState extends State<PredictionPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          result = '🎯 Predicted Life Expectancy: ${data['life_expectancy_years']?.toStringAsFixed(1) ?? 'N/A'} years\n'
+          result = 'Predicted Life Expectancy: ${data['life_expectancy_years']?.toStringAsFixed(1) ?? 'N/A'} years\n'
                    'Model: ${data['model_used'] ?? 'Unknown'}';
         });
       } else if (response.statusCode == 422) {
         setState(() {
-          result = '❌ Validation Error (datatype/range/missing fields):\n${response.body}';
+          result = 'Validation Error (datatype/range/missing fields):\n${response.body}';
         });
       } else {
         setState(() {
-          result = '❌ Error: ${response.statusCode}\n${response.body}';
+          result = 'Error: ${response.statusCode}\n${response.body}';
         });
       }
     } on SocketException {
       setState(() {
-        result = '❌ Network error. Check internet connection and API availability.';
+        result = 'Network error. Check internet connection and API availability.';
       });
     } catch (e) {
       setState(() {
-        result = '❌ Input Error: $e';
+        result = 'Input Error: $e';
       });
     } finally {
       setState(() => isLoading = false);

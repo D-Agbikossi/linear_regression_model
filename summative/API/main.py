@@ -22,7 +22,6 @@ FEATURE_COLS_PATH = LINEAR_DIR / "feature_columns.pkl"
 LABEL_ENC_PATH = LINEAR_DIR / "label_encoders.pkl"
 DATA_PATH = LINEAR_DIR / "Life Expectancy Data.csv"
 
-# Globals (hot-swapped on retrain)
 model: Any = None
 scaler: StandardScaler | None = None
 feature_columns: list[str] | None = None
@@ -42,7 +41,6 @@ load_artifacts()
 
 app = FastAPI(title="Life Expectancy Predictor API", version="1.1.0")
 
-# CORS - specific origins (no wildcard)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -121,7 +119,7 @@ def build_feature_row(data: PredictionInput) -> pd.DataFrame:
 
     input_df = pd.DataFrame([row])
 
-    # Safety: ensure every expected feature exists (model expects fixed width)
+    # Ensure every expected feature exists (model expects fixed width)
     for col in feature_columns:
         if col not in input_df.columns:
             input_df[col] = 0.0
@@ -190,14 +188,12 @@ def _engineer_features_like_notebook(df_raw: pd.DataFrame) -> pd.DataFrame:
     if "Country" in df.columns:
         df = df.drop(columns=["Country"], errors="ignore")
 
-    # notebook dropped NaNs early, then also filled numeric medians as a safety check
     df = df.dropna()
 
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     if len(numeric_cols) > 0:
         df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
 
-    # Encode categoricals (Status) using saved label_encoders when possible
     categorical_cols = df.select_dtypes(include=["object"]).columns
     for col in categorical_cols:
         if label_encoders and col in label_encoders:
