@@ -32,7 +32,7 @@ Endpoints:
 
 ## Video Demo
 
-https://youtu.be/nCDXWluSli0
+https://youtu.be/PBoF1a4d92c
 
 ## Mobile App Setup
 
